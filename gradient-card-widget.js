@@ -1,188 +1,180 @@
+class GradientCardWidget extends HTMLElement {
+  connectedCallback() {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: black;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    `;
 
-// gradient-card-widget.js
-import React from 'https://esm.sh/react';
-import ReactDOM from 'https://esm.sh/react-dom';
-import { motion } from 'https://esm.sh/framer-motion';
+    const card = document.createElement('div');
+    Object.assign(card.style, {
+      width: '360px',
+      height: '450px',
+      borderRadius: '32px',
+      backgroundColor: '#0e131f',
+      boxShadow: '0 -10px 100px 10px rgba(78, 99, 255, 0.25), 0 0 10px rgba(0,0,0,0.5)',
+      position: 'relative',
+      transformStyle: 'preserve-3d',
+      transition: 'transform 0.4s ease',
+      perspective: '1000px',
+      overflow: 'hidden'
+    });
 
-/** تبدیل GradientCard TSX به تابع درون این فایل */
-const GradientCard = () => {
-  const { useRef, useState } = React;
-  const cardRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+    // Reflection Overlay
+    const reflection = document.createElement('div');
+    Object.assign(reflection.style, {
+      position: 'absolute',
+      inset: '0',
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.05) 100%)',
+      backdropFilter: 'blur(2px)',
+      pointerEvents: 'none'
+    });
 
-  const handleMouseMove = (e) => {
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
+    // Noise Texture Overlay
+    const noise = document.createElement('div');
+    Object.assign(noise.style, {
+      position: 'absolute',
+      inset: '0',
+      opacity: '0.3',
+      mixBlendMode: 'overlay',
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+      pointerEvents: 'none'
+    });
+
+    // Smudge Texture Overlay
+    const smudge = document.createElement('div');
+    Object.assign(smudge.style, {
+      position: 'absolute',
+      inset: '0',
+      opacity: '0.1',
+      mixBlendMode: 'soft-light',
+      backdropFilter: 'blur(1px)',
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='smudge'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.01' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeGaussianBlur stdDeviation='10'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23smudge)'/%3E%3C/svg%3E")`,
+      pointerEvents: 'none'
+    });
+
+    // Glow Background
+    const glow1 = document.createElement('div');
+    Object.assign(glow1.style, {
+      position: 'absolute',
+      bottom: '0',
+      left: '0',
+      right: '0',
+      height: '66%',
+      background: `
+        radial-gradient(ellipse at bottom right, rgba(172, 92, 255, 0.7) -10%, rgba(79, 70, 229, 0) 70%),
+        radial-gradient(ellipse at bottom left, rgba(56, 189, 248, 0.7) -10%, rgba(79, 70, 229, 0) 70%)
+      `,
+      filter: 'blur(40px)',
+      pointerEvents: 'none'
+    });
+
+    const glow2 = document.createElement('div');
+    Object.assign(glow2.style, {
+      position: 'absolute',
+      bottom: '0',
+      left: '0',
+      right: '0',
+      height: '66%',
+      background: `
+        radial-gradient(circle at bottom center, rgba(161, 58, 229, 0.7) -20%, rgba(79, 70, 229, 0) 60%)
+      `,
+      filter: 'blur(45px)',
+      pointerEvents: 'none'
+    });
+
+    // Content Container
+    const content = document.createElement('div');
+    Object.assign(content.style, {
+      position: 'relative',
+      zIndex: '2',
+      padding: '32px',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      color: 'white',
+      fontFamily: 'sans-serif'
+    });
+
+    const iconCircle = document.createElement('div');
+    Object.assign(iconCircle.style, {
+      width: '48px',
+      height: '48px',
+      borderRadius: '50%',
+      marginBottom: '24px',
+      background: 'linear-gradient(225deg, #171c2c 0%, #121624 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative'
+    });
+
+    const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    star.setAttribute('width', '20');
+    star.setAttribute('height', '20');
+    star.setAttribute('viewBox', '0 0 16 16');
+    star.innerHTML = `<path d="M8 0L9.4 5.4L14.8 5.4L10.6 8.8L12 14.2L8 10.8L4 14.2L5.4 8.8L1.2 5.4L6.6 5.4L8 0Z" fill="white"/>`;
+
+    const title = document.createElement('h3');
+    title.textContent = 'AI‑Powered Inbox Sorting';
+    Object.assign(title.style, {
+      fontSize: '24px',
+      marginBottom: '12px',
+      lineHeight: '1.2'
+    });
+
+    const desc = document.createElement('p');
+    desc.textContent = 'OpenMail revolutionizes email management with AI-driven sorting, boosting productivity and accessibility';
+    Object.assign(desc.style, {
+      fontSize: '14px',
+      marginBottom: '24px',
+      color: '#ccc',
+      lineHeight: '1.5'
+    });
+
+    const learn = document.createElement('a');
+    learn.textContent = 'Learn More';
+    learn.href = '#';
+    Object.assign(learn.style, {
+      fontSize: '14px',
+      color: 'white',
+      textDecoration: 'none'
+    });
+
+    // Construct DOM
+    iconCircle.appendChild(star);
+    content.append(iconCircle, title, desc, learn);
+    card.append(reflection, glow1, glow2, noise, smudge, content);
+    wrapper.appendChild(card);
+    this.appendChild(wrapper);
+
+    // Animation handlers
+    let isHover = false;
+    card.addEventListener('mouseenter', () => (isHover = true));
+    card.addEventListener('mouseleave', () => {
+      isHover = false;
+      card.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      reflection.style.opacity = '0.5';
+      glow1.style.opacity = glow2.style.opacity = '0.8';
+    });
+    card.addEventListener('mousemove', (e) => {
+      if (!isHover) return;
+      const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left - rect.width / 2;
       const y = e.clientY - rect.top - rect.height / 2;
-      setMousePosition({ x, y });
-      const rotateX = -(y / rect.height) * 5;
-      const rotateY = (x / rect.width) * 5;
-      setRotation({ x: rotateX, y: rotateY });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setRotation({ x: 0, y: 0 });
-  };
-
-  return (
-    React.createElement('div', { className: 'w-full h-screen flex items-center justify-center bg-black' },
-      React.createElement(motion.div, {
-        ref: cardRef,
-        className: 'relative rounded-[32px] overflow-hidden',
-        style: {
-          width: '360px',
-          height: '450px',
-          transformStyle: 'preserve-3d',
-          backgroundColor: '#0e131f',
-          boxShadow: '0 -10px 100px 10px rgba(78, 99, 255, 0.25), 0 0 10px 0 rgba(0, 0, 0, 0.5)',
-        },
-        initial: { y: 0 },
-        animate: {
-          y: isHovered ? -5 : 0,
-          rotateX: rotation.x,
-          rotateY: rotation.y,
-          perspective: 1000,
-        },
-        transition: { type: 'spring', stiffness: 300, damping: 20 },
-        onMouseEnter: () => setIsHovered(true),
-        onMouseLeave: handleMouseLeave,
-        onMouseMove: handleMouseMove,
-      },
-        /* Reflection, textures, glows و ... (تمامی لایه‌ها مانند کد داده‌شده) */
-        /* ... (برای کوتاهی پاسخی نمونه‌سازی شد؛ اما لطفاً این بخش را عیناً از کد شما داخل تابع React قرار دهید) ... */
-        React.createElement(motion.div, {
-          className: 'relative flex flex-col h-full p-8 z-40',
-          animate: { z: 2 },
-        },
-          React.createElement(motion.div, {
-            className: 'w-12 h-12 rounded-full flex items-center justify-center mb-6',
-            style: {
-              background: 'linear-gradient(225deg, #171c2c 0%, #121624 100%)',
-              position: 'relative',
-              overflow: 'hidden',
-            },
-            initial: { filter: 'blur(3px)', opacity: 0.7 },
-            animate: {
-              filter: 'blur(0px)',
-              opacity: 1,
-              boxShadow: isHovered
-                ? '0 8px 16px -2px rgba(0, 0, 0, 0.3), 0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 2px 2px 5px rgba(255, 255, 255, 0.15), inset -2px -2px 5px rgba(0, 0, 0, 0.7)'
-                : '0 6px 12px -2px rgba(0, 0, 0, 0.25), 0 3px 6px -1px rgba(0, 0, 0, 0.15), inset 1px 1px 3px rgba(255, 255, 255, 0.12), inset -2px -2px 4px rgba(0, 0, 0, 0.5)',
-              z: isHovered ? 10 : 5,
-              y: isHovered ? -2 : 0,
-              rotateX: isHovered ? -rotation.x * 0.5 : 0,
-              rotateY: isHovered ? -rotation.y * 0.5 : 0,
-            },
-            transition: { duration: 0.4, ease: 'easeOut' },
-          },
-            React.createElement('div', {
-              className: 'absolute top-0 left-0 w-2/3 h-2/3 opacity-40',
-              style: {
-                background: 'radial-gradient(circle at top left, rgba(255, 255, 255, 0.5), transparent 80%)',
-                pointerEvents: 'none',
-                filter: 'blur(10px)',
-              },
-            }),
-            React.createElement('div', {
-              className: 'absolute bottom-0 left-0 w-full h-1/2 opacity-50',
-              style: {
-                background: 'linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent)',
-                pointerEvents: 'none',
-                backdropFilter: 'blur(3px)',
-              },
-            }),
-            React.createElement('div', {
-              className: 'flex items-center justify-center w-full h-full relative z-10',
-            },
-              React.createElement('svg', {
-                width: 20,
-                height: 20,
-                viewBox: '0 0 16 16',
-                fill: 'none',
-                xmlns: 'http://www.w3.org/2000/svg',
-              },
-                React.createElement('path', {
-                  d: 'M8 0L9.4 5.4L14.8 5.4L10.6 8.8L12 14.2L8 10.8L4 14.2L5.4 8.8L1.2 5.4L6.6 5.4L8 0Z',
-                  fill: 'white',
-                })
-              )
-            )
-          ),
-          React.createElement(motion.div, {
-            className: 'mb-auto',
-            animate: {
-              z: isHovered ? 5 : 2,
-              rotateX: isHovered ? -rotation.x * 0.3 : 0,
-              rotateY: isHovered ? -rotation.y * 0.3 : 0,
-            },
-            transition: { duration: 0.4, ease: 'easeOut' },
-          },
-            React.createElement(motion.h3, {
-              className: 'text-2xl font-medium text-white mb-3',
-              style: { letterSpacing: '-0.01em', lineHeight: 1.2 },
-              initial: { filter: 'blur(3px)', opacity: 0.7 },
-              animate: {
-                textShadow: isHovered ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
-                filter: 'blur(0px)',
-                opacity: 1,
-                transition: { duration: 1.2, delay: 0.2 },
-              }
-            }, 'AI‑Powered Inbox Sorting'),
-            React.createElement(motion.p, {
-              className: 'text-sm mb-6 text-gray-300',
-              style: { lineHeight: 1.5, fontWeight: 350 },
-              initial: { filter: 'blur(3px)', opacity: 0.7 },
-              animate: {
-                textShadow: isHovered ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                filter: 'blur(0px)',
-                opacity: 0.85,
-                transition: { duration: 1.2, delay: 0.4 },
-              }
-            }, 'OpenMail revolutionizes email management with AI-driven sorting, boosting productivity and accessibility'),
-            React.createElement(motion.a, {
-              href: '#',
-              className: 'inline‑flex items‑center text‑white text‑sm font‑medium group',
-              initial: { filter: 'blur(3px)', opacity: 0.7 },
-              animate: { filter: 'blur(0px)', opacity: 0.9, transition: { duration: 1.2, delay: 0.6 } },
-              whileHover: { filter: 'drop‑shadow(0 0 5px rgba(255, 255, 255, 0.5))' },
-            },
-              'Learn More',
-              React.createElement(motion.svg, {
-                className: 'ml‑1 w‑4 h‑4',
-                width: 8,
-                height: 8,
-                viewBox: '0 0 16 16',
-                fill: 'none',
-                xmlns: 'http://www.w3.org/2000/svg',
-                animate: { x: isHovered ? 4 : 0 },
-                transition: { duration: 0.6, ease: 'easeOut' },
-              },
-                React.createElement('path', {
-                  d: 'M1 8H15M15 8L8 1M15 8L8 15',
-                  stroke: 'white',
-                  strokeWidth: 1.5,
-                  strokeLinecap: 'round',
-                  strokeLinejoin: 'round',
-                })
-              )
-            )
-          )
-        )
-      )
-    )
-  );
-};
-
-class GradientCardElement extends HTMLElement {
-  connectedCallback() {
-    const mountPoint = document.createElement('div');
-    this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
-    ReactDOM.render(React.createElement(GradientCard), mountPoint);
+      const rotX = (-(y / rect.height) * 5).toFixed(2);
+      const rotY = ((x / rect.width) * 5).toFixed(2);
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(0)`;
+      reflection.style.opacity = '0.7';
+      glow1.style.opacity = glow2.style.opacity = '0.9';
+    });
   }
 }
-customElements.define('gradient-card-widget', GradientCardElement);
+
+customElements.define('gradient-card-widget', GradientCardWidget);
